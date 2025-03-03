@@ -4,6 +4,7 @@ public class EntityMoveState : IEntityState
 {
     private const float _moveTime = 2;
 
+    private Entity _enemy;
     private StateMachineBehaviour _sm;
     private IEntityState _idleState;
     private IEntityState _attackState;
@@ -19,35 +20,44 @@ public class EntityMoveState : IEntityState
 
     public void CheckSwitchState()
     {
-        //if(target in range)
+        if (_enemy == null) 
+        {
+            _sm.SwitchState(_idleState);
+            return;
+        }
+
+        if (DistanceHelper.Instance.GetSqrDistance(_sm.Entity, _enemy) <= 2)
+        {
+            _sm.SwitchState(_attackState);
+            return;
+        }
+
+        //if (_timer < _moveTime)
         //{
-        //    _sm.SwitchState(_attackState);
+        //    _timer += Time.deltaTime;
         //    return;
         //}
 
-        if (_timer < _moveTime)
-        {
-            _timer += Time.deltaTime;
-            return;
-        }
-        Debug.Log("Switch to idle");
-        _sm.SwitchState(_idleState);
+        //_sm.SwitchState(_idleState);
     }
 
     public void Enter()
     {
-        Debug.Log("EnterMove");
+        _enemy = DistanceHelper.Instance.FindClosest(_sm.Entity);
+
         _timer = 0;
     }
 
     public void Exit()
     {
-        Debug.Log("ExitMove");
     }
 
     public void Update()
     {
         CheckSwitchState();
-        _sm.transform.Translate(_sm.transform.forward * _speed * Time.deltaTime);
+
+        var direction = (_enemy.transform.position - _sm.transform.position).normalized;
+        _sm.transform.position += (direction * _speed * Time.deltaTime);
+        _sm.transform.LookAt(_enemy.transform, Vector3.up);
     }
 }

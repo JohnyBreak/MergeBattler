@@ -29,19 +29,17 @@ public class EntityIdleState : IEntityState
             _timer += Time.deltaTime;
             return;
         }
-        Debug.Log("Switch to move");
+
         _sm.SwitchState(_moveState);
     }
 
     public void Enter()
     {
-        Debug.Log("EnterIdle");
         _timer = 0;
     }
 
     public void Exit()
     {
-        Debug.Log("ExitIdle");
     }
 
     public void Update()

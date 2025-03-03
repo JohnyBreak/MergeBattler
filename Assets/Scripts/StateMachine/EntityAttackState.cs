@@ -3,13 +3,15 @@ using UnityEngine;
 
 public class EntityAttackState : IEntityState
 {
+
+    private Entity _enemy;
     private StateMachineBehaviour _sm;
     private IEntityState _moveState;
     private float _attack;
     private Coroutine _attackRoutine;
 
     public void Init(
-        StateMachineBehaviour sm, 
+        StateMachineBehaviour sm,
         IEntityState moveState,
         float attack)
     {
@@ -20,26 +22,34 @@ public class EntityAttackState : IEntityState
 
     public void CheckSwitchState()
     {
-        //if(target not in range)
-        //{
-        //    _sm.SwitchState(_moveState);
-        //    return;
-        //}
+        if (_enemy == null)
+        {
+            _sm.SwitchState(_moveState);
+            return;
+        }
+
+        if (DistanceHelper.Instance.GetSqrDistance(_sm.Entity, _enemy) > 2)
+        {
+            _sm.SwitchState(_moveState);
+            return;
+        }
     }
 
     public void Enter()
     {
-        _sm.StartCoroutine(AttackRoutine());
+        _enemy = DistanceHelper.Instance.FindClosest(_sm.Entity);
+        _attackRoutine = _sm.StartCoroutine(AttackRoutine());
     }
 
     private IEnumerator AttackRoutine()
     {
-        yield return new WaitForSeconds(1);
+        while(true)
+        {
+            yield return new WaitForSeconds(1);
 
-        Attack();
+            Attack();
 
-        yield return new WaitForSeconds(1);
-        _sm.SwitchState(_moveState);
+        }
     }
 
     private void Attack()
@@ -49,8 +59,11 @@ public class EntityAttackState : IEntityState
 
     public void Exit()
     {
-        _sm.StopCoroutine(AttackRoutine());
-        _attackRoutine = null;
+        if (_attackRoutine != null) 
+        {
+            _sm.StopCoroutine(_attackRoutine);
+            _attackRoutine = null;
+        }
     }
 
     public void Update()
